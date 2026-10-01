@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 
 import 'navigation/main_navigation.dart';
 import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => CartProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+      ],
       child: const AlteonApp(),
     ),
   );
@@ -22,9 +26,7 @@ class AlteonApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Alteon APP',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       home: const MainNavigation(),

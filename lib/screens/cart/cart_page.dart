@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/cart_provider.dart';
 import '../../widgets/cart_item_card.dart';
+import '../../providers/order_provider.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -69,6 +70,25 @@ class CartPage extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<OrderProvider>().addOrder(
+                        items: cart.items,
+                        total: cart.total,
+                      );
+
+                      context.read<CartProvider>().clearCart();
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Checkout berhasil')),
+                      );
+                    },
+                    child: Text('Checkout'),
                   ),
                 ),
               ],

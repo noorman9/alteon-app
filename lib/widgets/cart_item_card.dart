@@ -1,12 +1,15 @@
+import 'package:alteon_app/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../models/cart_item.dart';
+
 
 class CartItemCard extends StatelessWidget {
   final CartItem item;
   final VoidCallback onIncrease;
   final VoidCallback onDecrease;
   final VoidCallback onDelete;
+  final bool isProcessing;
 
   const CartItemCard({
     super.key,
@@ -14,6 +17,7 @@ class CartItemCard extends StatelessWidget {
     required this.onIncrease,
     required this.onDecrease,
     required this.onDelete,
+    this.isProcessing = false,
   });
 
   @override
@@ -51,7 +55,7 @@ class CartItemCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    'Rp ${item.product.price.toStringAsFixed(0)}',
+                    formatRupiah(item.product.price),
                   ),
 
                   const SizedBox(height: 8),
@@ -59,20 +63,35 @@ class CartItemCard extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: onDecrease,
+                        onPressed:
+                            isProcessing ? null : onDecrease,
                         icon: const Icon(Icons.remove),
                       ),
 
-                      Text(
-                        '${item.quantity}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      SizedBox(
+                        width: 32,
+                        child: isProcessing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                '${item.quantity}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
 
                       IconButton(
-                        onPressed: onIncrease,
+                        onPressed:
+                            isProcessing ? null : onIncrease,
                         icon: const Icon(Icons.add),
                       ),
                     ],
@@ -82,7 +101,8 @@ class CartItemCard extends StatelessWidget {
             ),
 
             IconButton(
-              onPressed: onDelete,
+              onPressed:
+                  isProcessing ? null : onDelete,
               icon: const Icon(Icons.delete),
             ),
           ],

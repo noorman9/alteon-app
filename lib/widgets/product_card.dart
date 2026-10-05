@@ -1,3 +1,4 @@
+import 'package:alteon_app/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
@@ -30,7 +31,7 @@ class ProductCard extends StatelessWidget {
         ),
         title: Text(product.name),
         subtitle: Text(
-          'Rp ${product.price.toStringAsFixed(0)}',
+          formatRupiah(product.price),
         ),
       ),
     );

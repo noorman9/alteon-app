@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
+import '../../utils/currency_formatter.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final Product product;
@@ -35,7 +36,7 @@ class ProductDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              'Rp ${product.price.toStringAsFixed(0)}',
+              ' ${formatRupiah(product.price)}',
               style: const TextStyle(fontSize: 20),
             ),
 
@@ -48,12 +49,22 @@ class ProductDetailPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  context.read<CartProvider>().addItem(product);
+                onPressed: () async {
+                  final success = await context.read<CartProvider>().addItem(
+                    product,
+                  );
+
+                  if (!context.mounted) return;
+
+                  final cart = context.read<CartProvider>();
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Barang ditambahkan ke keranjang'),
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? 'Barang ditambahkan ke keranjang'
+                            : cart.error ?? 'Gagal menambahkan barang',
+                      ),
                     ),
                   );
                 },

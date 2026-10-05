@@ -8,17 +8,48 @@ import 'providers/product_provider.dart';
 import 'repositories/product_repository.dart';
 import 'services/product_service.dart';
 
+import 'services/auth_service.dart';
+import 'repositories/auth_repository.dart';
+import 'providers/auth_provider.dart';
+import 'services/auth_storage.dart';
+
+import 'services/cart_service.dart';
+import 'repositories/cart_repository.dart';
+
+
+import 'repositories/order_repository.dart';
+import 'services/order_service.dart';
+
+
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
+          create: (_) => AuthProvider(
+            repository: AuthRepository(service: AuthService()),
+            storage: AuthStorage(),
+          ),
+        ),
+        ChangeNotifierProvider(
           create: (_) => ProductProvider(
             repository: ProductRepository(service: ProductService()),
           ),
         ),
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(
+          create: (_) => CartProvider(
+            repository: CartRepository(service: CartService()),
+            storage: AuthStorage(),
+          ),
+        ),
+        ChangeNotifierProvider(
+  create: (_) => OrderProvider(
+    repository: OrderRepository(
+      service: OrderService(),
+    ),
+    storage: AuthStorage(),
+  ),
+),
       ],
       child: const AlteonApp(),
     ),
@@ -37,7 +68,54 @@ class AlteonApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MainNavigation(),
+      home: const App(),
+    );
+  }
+}
+
+class App extends StatefulWidget {
+  const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+
+  bool _cartLoaded = false;
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      context.read<AuthProvider>().checkAuth();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, child) {
+        if (auth.isCheckingAuth) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if(auth.isLoggedIn && !_cartLoaded){
+          _cartLoaded = true;
+
+          Future.microtask((){
+            context.read<CartProvider>().loadCart();
+          });
+        }
+        
+        if(!auth.isLoggedIn){
+          _cartLoaded = false;
+        }
+
+        return const MainNavigation();
+      },
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:alteon_app/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +12,7 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final order = context.watch<OrderProvider>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Keranjang')),
@@ -32,9 +34,22 @@ class CartPage extends StatelessWidget {
 
                       return CartItemCard(
                         item: item,
+                        isProcessing: cart.isProcessing(item.id),
 
-                        onIncrease: () {
-                          cart.increaseQuantity(item.product);
+                        onIncrease: () async {
+                          final success = await cart.increaseQuantity(
+                            item.product,
+                          );
+
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  cart.error ?? 'Tidak bisa menambah quantity',
+                                ),
+                              ),
+                            );
+                          }
                         },
 
                         onDecrease: () {
@@ -63,7 +78,7 @@ class CartPage extends StatelessWidget {
                       ),
 
                       Text(
-                        'Rp ${cart.total.toStringAsFixed(0)}',
+                        'Rp ${formatRupiah(cart.total)}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -72,25 +87,60 @@ class CartPage extends StatelessWidget {
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.read<OrderProvider>().addOrder(
-                        items: cart.items,
-                        total: cart.total,
-                      );
 
-                      context.read<CartProvider>().clearCart();
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: order.isLoading
+                          ? null
+                          : () async {
+                              final success = await context
+                                  .read<OrderProvider>()
+                                  .createOrder();
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Checkout berhasil')),
-                      );
-                    },
-                    child: Text('Checkout'),
+                              if (!context.mounted) return;
+
+                              if (success) {
+                                await context.read<CartProvider>().loadCart();
+                                await context
+                                    .read<OrderProvider>()
+                                    .loadOrders();
+
+                                if (!context.mounted) return;
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Checkout berhasil'),
+                                  ),
+                                );
+                              } else {
+                                final error = context
+                                    .read<OrderProvider>()
+                                    .error;
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(error ?? 'Checkout gagal'),
+                                  ),
+                                );
+                              }
+                            },
+                      child: order.isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Checkout'),
+                    ),
                   ),
                 ),
+
+                const SizedBox(height: 16),
               ],
             ),
     );
